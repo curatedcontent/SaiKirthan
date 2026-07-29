@@ -1,0 +1,36 @@
+name: saikirthan
+description: A multilingual devotional app for Sai Baba content
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  flutter_launcher_icons: ^0.10.0
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/texts/English/
+    - assets/texts/Hindi/
+    - assets/texts/Telugu/
+  
+  # Launcher icon configuration: uses landing_image.jpg for both iOS and Android
+  # Run `flutter pub run flutter_launcher_icons:main` to generate icons.
+flutter_icons:
+  android: true
+  ios: true
+  image_path: assets/images/landing_image.jpg
+  image_path_ios: assets/images/landing_image.jpg
+  
