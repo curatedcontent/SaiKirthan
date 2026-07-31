@@ -1,4 +1,4 @@
-name: Deploy web app to GitHub Pages
+name: Deploy Flutter Web to GitHub Pages
 
 on:
   push:
@@ -6,31 +6,58 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
 
 jobs:
-  build-and-deploy:
+  build:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      - name: Set up Flutter
-        uses: subosito/flutter-action@v2
+      - uses: subosito/flutter-action@v2
         with:
           channel: stable
 
-      - name: Install dependencies
-        run: flutter pub get
+      - run: flutter pub get
 
-      - name: Build web app
-        run: flutter build web --release --base-href /SaiKirthan/
+      # base-href matches this repo's name so the app works both at this
+      # repo's own project-pages URL (curatedcontent.github.io/SaiKirthan/)
+      # and at the same subpath in the catalogentry-hub site
+      # (www.catalogentry.com/SaiKirthan/).
+      - run: flutter build web --release --base-href /SaiKirthan/ --no-web-resources-cdn
 
-      - name: Deploy to gh-pages
-        uses: peaceiris/actions-gh-pages@v4
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          path: build/web
+
+      # Also publish into curatedcontent/catalogentry-hub's gh-pages branch
+      # under /SaiKirthan/, so www.catalogentry.com/SaiKirthan/ stays in
+      # sync. keep_files preserves the hub's own content and other projects.
+      - uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.HUB_DEPLOY_TOKEN }}
+          external_repository: curatedcontent/catalogentry-hub
+          publish_branch: gh-pages
           publish_dir: build/web
           destination_dir: SaiKirthan
           keep_files: true
-          cname: www.catalogentry.com
+          user_name: vintage
+          user_email: email@catalogentry.com
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
